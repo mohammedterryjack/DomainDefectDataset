@@ -1,6 +1,5 @@
 rule: 9
-width: 300
-depth: 100
-initial_configuration: 001010001
-category: spreading defect
-annotation: annotations/1.npy
+width: 100
+depth: 50
+initial_configuration: '0000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000'
+category: wall
