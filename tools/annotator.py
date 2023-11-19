@@ -23,7 +23,6 @@ if __name__ == "__main__":
         ca.transition(rule_number=metadata['rule'])
 
     annotation_path = f'./dataset/annotations/{arguments.sample}.txt'
-    print(annotation_path, isfile(annotation_path))
     if isfile(annotation_path):
         annotation_canvas = loadtxt(annotation_path, dtype=int)
     else:
