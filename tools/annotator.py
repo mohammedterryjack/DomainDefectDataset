@@ -23,6 +23,7 @@ if __name__ == "__main__":
         ca.transition(rule_number=metadata['rule'])
 
     annotation_path = f'./dataset/annotations/{arguments.sample}.txt'
+    print(annotation_path, isfile(annotation_path))
     if isfile(annotation_path):
         annotation_canvas = loadtxt(annotation_path, dtype=int)
     else:
@@ -40,10 +41,8 @@ if __name__ == "__main__":
         global prev_coords
         global pen_down
         if event.xdata and event.ydata and pen_down:
-            relative_x = event.xdata/100
-            relative_y = event.ydata/50
-            x = int(metadata['width'] * relative_x)
-            y = int(metadata['depth'] * relative_y)
+            x = int(event.xdata) 
+            y = int(event.ydata)
             if (x,y) not in prev_coords:
                 prev_coords.append((x,y))
                 annotation_canvas[y][x] = int(not annotation_canvas[y][x])
