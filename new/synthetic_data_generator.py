@@ -64,20 +64,20 @@ def random_domains(
         yield domain_pattern
 
 
-def fill_domains(n_domains: int, labelled_image: ndarray) -> ndarray:
-    width, height = labelled_image.shape
-    domains = list(random_domains(n=n_domains, width=width, depth=height, max_phase=3))
-    filled_image = ones_like(labelled_image) * -1
+def fill_domains(
+    n_domains: int, segmented_image: ndarray, background_patterns: list[list[list[int]]]
+) -> ndarray:
+    filled_image = ones_like(segmented_image) * -1
     for domain_label in range(n_domains + 1):
-        for x, y in zip(*where(labelled_image == domain_label)):
-            filled_image[x][y] = domains[domain_label][x][y]
+        for x, y in zip(*where(segmented_image == domain_label)):
+            filled_image[x][y] = background_patterns[domain_label][x][y]
     return filled_image
 
 
-def closest(
-    target_coord: tuple[int, int], source_coords: list[tuple[int, int]]
+def closest_coordinates(
+    target_coordinate: tuple[int, int], source_coordinates: list[tuple[int, int]]
 ) -> float:
-    distances = [dist(coord, target_coord) for coord in source_coords]
+    distances = [dist(coord, target_coordinate) for coord in source_coordinates]
     return distances.index(min(distances))
 
 
@@ -85,21 +85,34 @@ def random_coordinates(n: int, width: int, depth: int) -> list[tuple[int, int]]:
     return [(randint(0, width), randint(0, depth)) for _ in range(n)]
 
 
-def randomly_segmented_image(width: int, depth: int, n_domains: int) -> ndarray:
-    seeds = random_coordinates(n=n_domains, width=width, depth=depth)
+def segment_image_by_distance_from_seed(
+    width: int,
+    depth: int,
+    n_domains: int,
+    seed_coordinates: Optional[list[tuple[int, int]]] = None,
+) -> ndarray:
+    if seed_coordinates is None:
+        seed_coordinates = random_coordinates(n=n_domains, width=width, depth=depth)
     labelled_image = zeros(shape=(width, depth))
     for x in range(width):
         for y in range(depth):
-            labelled_image[x][y] = closest(target_coord=(x, y), source_coords=seeds)
+            labelled_image[x][y] = closest_coordinates(
+                target_coordinate=(x, y), source_coordinates=seed_coordinates
+            )
     return labelled_image
 
 
 def generate_sample(width: int, depth: int, n_domains: int) -> ndarray:
+    segmented_image = segment_image_by_distance_from_seed(
+        width=width, depth=depth, n_domains=n_domains
+    )
+    domain_patterns = list(
+        random_domains(n=n_domains, width=width, depth=depth, max_phase=3)
+    )
     return fill_domains(
         n_domains=n_domains,
-        labelled_image=randomly_segmented_image(
-            width=width, depth=depth, n_domains=n_domains
-        ),
+        segmented_image=segmented_image,
+        background_patterns=domain_patterns,
     )
 
 
