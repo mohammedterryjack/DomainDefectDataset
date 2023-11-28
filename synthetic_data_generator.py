@@ -162,6 +162,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--domain_pattern", type=str, nargs="+", action="append", default=None
     )
+    parser.add_argument("--save", type=str, default="dataset.txt")
     arguments = parser.parse_args()
 
     width = arguments.width
