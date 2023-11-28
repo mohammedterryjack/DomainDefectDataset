@@ -93,9 +93,20 @@ def segment_image_by_distance_from_seed(
     return labelled_image
 
 
-def draw_domain_boundaries(segmented_image: ndarray) -> ndarray:
-    # TODO
-    return segmented_image
+def find_domain_boundaries_using_neighbours(segmented_image: ndarray) -> ndarray:
+    width, depth = segmented_image.shape
+    contours = zeros(shape=(width, depth))
+    for x in range(width):
+        for y in range(depth):
+            centre = segmented_image[x][y]
+            right = segmented_image[min(x + 1, width - 1)][y]
+            left = segmented_image[max(x - 1, 0)][y]
+            up = segmented_image[x][min(y + 1, depth - 1)]
+            down = segmented_image[x][max(y - 1, 0)]
+            if centre == right == left == up == down:
+                continue
+            contours[x][y] = 1
+    return contours
 
 
 def generate_sample(
@@ -105,20 +116,21 @@ def generate_sample(
     domain_seed_coordinates: list[tuple[int, int]],
     domain_pattern_signatures: list[str],
 ) -> tuple[ndarray, ndarray, ndarray]:
-    domain_patterns = generate_selected_domain_patterns(
-        width=width, depth=depth, pattern_signatures=domain_pattern_signatures
-    )
-    segmented_image = segment_image_by_distance_from_seed(
+    domains = segment_image_by_distance_from_seed(
         width=width, depth=depth, seed_coordinates=domain_seed_coordinates
     )
-    return (
-        fill_domains(
-            n_domains=n_domains,
-            segmented_image=segmented_image,
-            background_patterns=domain_patterns,
+    domain_defects = find_domain_boundaries_using_neighbours(segmented_image=domains)
+    synthetic_spacetime = fill_domains(
+        n_domains=n_domains,
+        segmented_image=domains,
+        background_patterns=generate_selected_domain_patterns(
+            width=width, depth=depth, pattern_signatures=domain_pattern_signatures
         ),
-        segmented_image,
-        draw_domain_boundaries(segmented_image=segmented_image),
+    )
+    return (
+        synthetic_spacetime,
+        domains,
+        domain_defects,
     )
 
 
