@@ -114,23 +114,37 @@ def generate_sample(
     depth: int,
     n_domains: int,
     domain_seed_coordinates: list[tuple[int, int]],
-    domain_pattern_signatures: list[str],
+    domain_pattern_signatures: list[list[str]],
 ) -> tuple[ndarray, ndarray, ndarray]:
-    domains = segment_image_by_distance_from_seed(
+    """Generate a synthetic spacetime-like pattern and annotations
+    
+    Args:
+        width (int): the width of the synthetic spacetime-like pattern
+        depth (int): the depth of the synthetic spacetime-like pattern
+        n_domains (int): the number of domains the synthetic image should have
+        domain_seed_coordinates (list[tuple[int,int]]): the coordinate of the centre of each domain
+        domain_pattern_signatures (list[str]): the patterns for each domain
+    
+    Returns:
+        ndarray: synthetic spacetime-like pattern
+        ndarray: an annotation of the domains
+        ndarray: an annotation of the domain defects
+    """
+    synthetic_domains = segment_image_by_distance_from_seed(
         width=width, depth=depth, seed_coordinates=domain_seed_coordinates
     )
-    domain_defects = find_domain_boundaries_using_neighbours(segmented_image=domains)
+    synthetic_domain_defects = find_domain_boundaries_using_neighbours(segmented_image=synthetic_domains)
     synthetic_spacetime = fill_domains(
         n_domains=n_domains,
-        segmented_image=domains,
+        segmented_image=synthetic_domains,
         background_patterns=generate_selected_domain_patterns(
             width=width, depth=depth, pattern_signatures=domain_pattern_signatures
         ),
     )
     return (
         synthetic_spacetime,
-        domains,
-        domain_defects,
+        synthetic_domains,
+        synthetic_domain_defects,
     )
 
 
