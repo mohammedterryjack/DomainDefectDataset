@@ -3,7 +3,7 @@ from itertools import combinations, permutations
 from math import dist
 from random import randint, shuffle
 
-from matplotlib.pyplot import imshow, show
+from matplotlib.pyplot import show, subplots
 from numpy import ndarray, ones_like, where, zeros
 
 
@@ -117,14 +117,14 @@ def generate_sample(
     domain_pattern_signatures: list[list[str]],
 ) -> tuple[ndarray, ndarray, ndarray]:
     """Generate a synthetic spacetime-like pattern and annotations
-    
+
     Args:
         width (int): the width of the synthetic spacetime-like pattern
         depth (int): the depth of the synthetic spacetime-like pattern
         n_domains (int): the number of domains the synthetic image should have
         domain_seed_coordinates (list[tuple[int,int]]): the coordinate of the centre of each domain
         domain_pattern_signatures (list[str]): the patterns for each domain
-    
+
     Returns:
         ndarray: synthetic spacetime-like pattern
         ndarray: an annotation of the domains
@@ -133,7 +133,9 @@ def generate_sample(
     synthetic_domains = segment_image_by_distance_from_seed(
         width=width, depth=depth, seed_coordinates=domain_seed_coordinates
     )
-    synthetic_domain_defects = find_domain_boundaries_using_neighbours(segmented_image=synthetic_domains)
+    synthetic_domain_defects = find_domain_boundaries_using_neighbours(
+        segmented_image=synthetic_domains
+    )
     synthetic_spacetime = fill_domains(
         n_domains=n_domains,
         segmented_image=synthetic_domains,
@@ -221,16 +223,16 @@ if __name__ == "__main__":
         f"width: {width}\ndepth: {depth}\ndomain seed coordinates: {domain_seed_coordinates}\ndomain pattern signatures: {domain_pattern_signatures}"
     )
 
-    image, domains, defects = generate_sample(
+    spacetime, domains, defects = generate_sample(
         width=width,
         depth=depth,
         n_domains=n_domains,
         domain_seed_coordinates=domain_seed_coordinates,
         domain_pattern_signatures=domain_pattern_signatures,
     )
-    imshow(image, cmap="gray")
-    show()
-    imshow(domains, cmap="gray")
-    show()
-    imshow(defects, cmap="gray")
+    fig, axs = subplots(3)
+    fig.suptitle("Synthetic Sample")
+    axs[0].imshow(spacetime, cmap="gray")
+    axs[1].imshow(domains, cmap="gray")
+    axs[2].imshow(defects, cmap="gray")
     show()
