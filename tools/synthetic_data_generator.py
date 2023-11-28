@@ -93,23 +93,32 @@ def segment_image_by_distance_from_seed(
     return labelled_image
 
 
+def draw_domain_boundaries(segmented_image: ndarray) -> ndarray:
+    # TODO
+    return segmented_image
+
+
 def generate_sample(
     width: int,
     depth: int,
     n_domains: int,
     domain_seed_coordinates: list[tuple[int, int]],
     domain_pattern_signatures: list[str],
-) -> ndarray:
+) -> tuple[ndarray, ndarray, ndarray]:
     domain_patterns = generate_selected_domain_patterns(
         width=width, depth=depth, pattern_signatures=domain_pattern_signatures
     )
     segmented_image = segment_image_by_distance_from_seed(
         width=width, depth=depth, seed_coordinates=domain_seed_coordinates
     )
-    return fill_domains(
-        n_domains=n_domains,
-        segmented_image=segmented_image,
-        background_patterns=domain_patterns,
+    return (
+        fill_domains(
+            n_domains=n_domains,
+            segmented_image=segmented_image,
+            background_patterns=domain_patterns,
+        ),
+        segmented_image,
+        draw_domain_boundaries(segmented_image=segmented_image),
     )
 
 
@@ -186,7 +195,7 @@ if __name__ == "__main__":
         f"width: {width}\ndepth: {depth}\ndomain seed coordinates: {domain_seed_coordinates}\ndomain pattern signatures: {domain_pattern_signatures}"
     )
 
-    image = generate_sample(
+    image, domains, defects = generate_sample(
         width=width,
         depth=depth,
         n_domains=n_domains,
@@ -194,4 +203,8 @@ if __name__ == "__main__":
         domain_pattern_signatures=domain_pattern_signatures,
     )
     imshow(image, cmap="gray")
+    show()
+    imshow(domains, cmap="gray")
+    show()
+    imshow(defects, cmap="gray")
     show()
