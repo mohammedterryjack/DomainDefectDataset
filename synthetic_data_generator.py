@@ -220,9 +220,10 @@ if __name__ == "__main__":
         for domain_pattern_signature in domain_pattern_signatures
     )
 
-    print(
-        f"width: {width}\ndepth: {depth}\ndomain seed coordinates: {domain_seed_coordinates}\ndomain pattern signatures: {domain_pattern_signatures}"
-    )
+    info = f"spacetime: ({width}, {depth}), domains: ({','.join(map(str,domain_seed_coordinates))}), patterns: ({','.join('-'.join(signature) for signature in domain_pattern_signatures)})\n"
+    with open(arguments.save, "w") as save_file:
+        save_file.write(info)
+        print(info)
 
     spacetime, domains, defects = generate_sample(
         width=width,
