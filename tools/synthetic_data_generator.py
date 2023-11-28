@@ -119,7 +119,9 @@ if __name__ == "__main__":
     parser.add_argument("--time", type=int, default=200)
     parser.add_argument("--max_phase", type=int, default=None)
     parser.add_argument("--n_domains", type=int, default=None)
-    parser.add_argument("--seed", type=int, nargs="+", action="append", default=None)
+    parser.add_argument(
+        "--domain_centre", type=int, nargs="+", action="append", default=None
+    )
     parser.add_argument(
         "--domain_pattern", type=str, nargs="+", action="append", default=None
     )
@@ -128,7 +130,7 @@ if __name__ == "__main__":
     width = arguments.width
     depth = arguments.time
     max_phase_domain_pattern = arguments.max_phase
-    domain_seed_coordinates = arguments.seed
+    domain_seed_coordinates = arguments.domain_centre
     domain_pattern_signatures = arguments.domain_pattern
     n_domains = arguments.n_domains
 
