@@ -26,4 +26,5 @@ python synthetic_data_generator.py --samples 500 --no-display
 ```
 
 ## Todo:
-- stochastic defects?
+- stochastic defects
+- chaotic domain patterns
