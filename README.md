@@ -26,5 +26,4 @@ python synthetic_data_generator.py --samples 500 --no-display
 ```
 
 ## Todo:
-- store data sample in json (include base64 encoding of image and labelled image)
-- allow number of samples to be generated from CLI
+- stochastic defects?
