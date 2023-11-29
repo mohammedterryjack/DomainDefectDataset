@@ -11,7 +11,7 @@ python synthetic_data_generator.py
 
 More control?
 ```python
-python synthetic_data_generator.py --width 100 --time 200 --max_phase 3 --n_domains 3 --save bla.txt
+python synthetic_data_generator.py --space 100 --time 200 --max_phase 3 --n_domains 3 --save bla.txt
 ```
 ![](example.png)
 

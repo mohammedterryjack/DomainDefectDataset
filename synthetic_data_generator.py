@@ -64,7 +64,7 @@ def fill_domains(
     for domain_label in range(n_domains):
         for x, y in zip(*where(segmented_image == domain_label)):
             background_pattern = background_patterns[domain_label]
-            filled_image[x][y] = background_pattern[y][x]
+            filled_image[x][y] = background_pattern[x][y]
     return filled_image
 
 
@@ -84,9 +84,9 @@ def segment_image_by_distance_from_seed(
     depth: int,
     seed_coordinates: list[tuple[int, int]],
 ) -> ndarray:
-    labelled_image = zeros(shape=(width, depth))
-    for x in range(width):
-        for y in range(depth):
+    labelled_image = zeros(shape=(depth, width))
+    for x in range(depth):
+        for y in range(width):
             labelled_image[x][y] = closest_coordinates(
                 target_coordinate=(x, y), source_coordinates=seed_coordinates
             )
@@ -152,8 +152,8 @@ def generate_sample(
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--width", type=int, default=100)
-    parser.add_argument("--time", type=int, default=200)
+    parser.add_argument("--space", type=int, default=200)
+    parser.add_argument("--time", type=int, default=100)
     parser.add_argument("--max_phase", type=int, default=None)
     parser.add_argument("--n_domains", type=int, default=None)
     parser.add_argument(
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     parser.add_argument("--save", type=str, default="dataset.txt")
     arguments = parser.parse_args()
 
-    width = arguments.width
+    width = arguments.space
     depth = arguments.time
     max_phase_domain_pattern = arguments.max_phase
     domain_seed_coordinates = arguments.domain_centre
