@@ -1,4 +1,3 @@
-eca==0.0.11
+opencv-python==4.7.0.72
 matplotlib==3.5.1
-PyYAML==5.4.1
 numpy==1.22.1
