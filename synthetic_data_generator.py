@@ -1,5 +1,7 @@
 from argparse import ArgumentParser, BooleanOptionalAction
+from base64 import b64encode
 from itertools import combinations, permutations
+from json import dump
 from math import dist
 from random import randint, shuffle
 
@@ -135,6 +137,10 @@ def label_domains_given_defects(image: ndarray) -> None:
     return label_ids
 
 
+def array_to_string(image: ndarray) -> str:
+    return b64encode(image).decode("utf-8")
+
+
 def generate_sample(
     width: int,
     depth: int,
@@ -231,6 +237,7 @@ if __name__ == "__main__":
     parser.add_argument("--display", action=BooleanOptionalAction, default=True)
     parser.add_argument("--samples", type=int, default=1)
     parser.add_argument("--stochastic_defects", type=int, default=0)
+    parser.add_argument("--save_path", type=str, default="dataset")
     arguments = parser.parse_args()
 
     n_samples = arguments.samples
@@ -242,90 +249,107 @@ if __name__ == "__main__":
     n_domains = arguments.n_domains
     n_stochastic_defects = arguments.stochastic_defects
 
-    with open("dataset.csv", "w") as save_file:
-        save_file.write(f"spacetime|domains|patterns|n_stochastic_defects\n")
-
-        assert n_samples > 0, "n_samples must be a positive integer"
-        for _ in range(n_samples):
-            if arguments.n_domains is None:
-                if domain_seed_coordinates:
-                    n_domains = len(domain_seed_coordinates)
-                elif domain_pattern_signatures:
-                    n_domains = len(domain_pattern_signatures)
-                else:
-                    n_domains = randint(2, 5)
-
-            assert depth > 1, "depth must be a positive integer"
-            assert width > 1, "width must be a positive integer"
-            assert n_domains > 1, "number of domains must be more than one"
-
-            if arguments.domain_centre is None:
-                domain_seed_coordinates = random_coordinates(
-                    n=n_domains, width=width, depth=depth
-                )
-
-            assert (
-                len(domain_seed_coordinates) == n_domains
-            ), f"number of domain seeds should match number of domains specified ({n_domains})"
-            assert all(
-                0 <= x <= width and 0 <= y <= depth for x, y in domain_seed_coordinates
-            ), f"all coordinates must be within the bounds of the image (width={width} depth={depth})"
-
-            if max_phase_domain_pattern is None:
-                if domain_pattern_signatures:
-                    max_phase_domain_pattern = max(map(len, domain_pattern_signatures))
-                else:
-                    max_phase_domain_pattern = randint(2, 5)
-
-            assert max_phase_domain_pattern > 0
-
-            if arguments.domain_pattern is None:
-                domain_pattern_signatures = random_domains(
-                    n=n_domains,
-                    max_phase=max_phase_domain_pattern,
-                )
-
-            assert len(domain_pattern_signatures) == len(
-                set(map("-".join, domain_pattern_signatures))
-            ), f"each domain pattern signature should be unique: {domain_pattern_signatures}"
-            assert (
-                len(domain_pattern_signatures) == n_domains
-            ), f"number of pattern signatures should match number of domains requested ({n_domains})"
-            assert all(
-                1 <= len(domain_pattern_signature) <= max_phase_domain_pattern
-                for domain_pattern_signature in domain_pattern_signatures
-            )
-
-            if n_stochastic_defects:
-                (
-                    spacetime,
-                    domains,
-                    defects,
-                    domain_pattern_signatures,
-                ) = generate_stochastic_sample(
-                    width=width,
-                    depth=depth,
-                    n_defects=n_stochastic_defects,
-                    max_phase=max_phase_domain_pattern,
-                )
-
+    assert n_samples > 0, "n_samples must be a positive integer"
+    for sample_number in range(n_samples):
+        if arguments.n_domains is None:
+            if domain_seed_coordinates:
+                n_domains = len(domain_seed_coordinates)
+            elif domain_pattern_signatures:
+                n_domains = len(domain_pattern_signatures)
             else:
-                spacetime, domains, defects = generate_sample(
-                    width=width,
-                    depth=depth,
-                    n_domains=n_domains,
-                    domain_seed_coordinates=domain_seed_coordinates,
-                    domain_pattern_signatures=domain_pattern_signatures,
-                )
+                n_domains = randint(2, 5)
 
-            if arguments.display:
-                fig, axs = subplots(3)
-                fig.suptitle("Synthetic Sample")
-                axs[0].imshow(spacetime, cmap="gray")
-                axs[1].imshow(domains, cmap="gray")
-                axs[2].imshow(defects, cmap="gray")
-                show()
+        assert depth > 1, "depth must be a positive integer"
+        assert width > 1, "width must be a positive integer"
+        assert n_domains > 1, "number of domains must be more than one"
 
-            save_file.write(
-                f"({width}, {depth})|{','.join(map(str,domain_seed_coordinates))}|{','.join('-'.join(signature) for signature in domain_pattern_signatures)}|{n_stochastic_defects}\n"
+        if arguments.domain_centre is None:
+            domain_seed_coordinates = random_coordinates(
+                n=n_domains, width=width, depth=depth
             )
+
+        assert (
+            len(domain_seed_coordinates) == n_domains
+        ), f"number of domain seeds should match number of domains specified ({n_domains})"
+        assert all(
+            0 <= x <= width and 0 <= y <= depth for x, y in domain_seed_coordinates
+        ), f"all coordinates must be within the bounds of the image (width={width} depth={depth})"
+
+        if max_phase_domain_pattern is None:
+            if domain_pattern_signatures:
+                max_phase_domain_pattern = max(map(len, domain_pattern_signatures))
+            else:
+                max_phase_domain_pattern = randint(2, 5)
+
+        assert max_phase_domain_pattern > 0
+
+        if arguments.domain_pattern is None:
+            domain_pattern_signatures = random_domains(
+                n=n_domains,
+                max_phase=max_phase_domain_pattern,
+            )
+
+        assert len(domain_pattern_signatures) == len(
+            set(map("-".join, domain_pattern_signatures))
+        ), f"each domain pattern signature should be unique: {domain_pattern_signatures}"
+        assert (
+            len(domain_pattern_signatures) == n_domains
+        ), f"number of pattern signatures should match number of domains requested ({n_domains})"
+        assert all(
+            1 <= len(domain_pattern_signature) <= max_phase_domain_pattern
+            for domain_pattern_signature in domain_pattern_signatures
+        )
+
+        if n_stochastic_defects:
+            (
+                spacetime,
+                domains,
+                defects,
+                domain_pattern_signatures,
+            ) = generate_stochastic_sample(
+                width=width,
+                depth=depth,
+                n_defects=n_stochastic_defects,
+                max_phase=max_phase_domain_pattern,
+            )
+
+        else:
+            spacetime, domains, defects = generate_sample(
+                width=width,
+                depth=depth,
+                n_domains=n_domains,
+                domain_seed_coordinates=domain_seed_coordinates,
+                domain_pattern_signatures=domain_pattern_signatures,
+            )
+
+        if arguments.display:
+            fig, axs = subplots(3)
+            fig.suptitle("Synthetic Sample")
+            axs[0].imshow(spacetime, cmap="gray")
+            axs[1].imshow(domains, cmap="gray")
+            axs[2].imshow(defects, cmap="gray")
+            show()
+
+        with open(
+            f"{arguments.save_path}/sample_{sample_number}.json", "w"
+        ) as save_file:
+            data = dict(
+                metadata=dict(
+                    lattice_width=width,
+                    time=depth,
+                    domains=list(
+                        map(
+                            lambda centre, signature: dict(
+                                centre=dict(x=centre[0], y=centre[1]),
+                                pattern_signature="-".join(signature),
+                            ),
+                            domain_seed_coordinates,
+                            domain_pattern_signatures,
+                        )
+                    ),
+                    n_stochastic_defects=n_stochastic_defects,
+                ),
+                spacetime=array_to_string(spacetime),
+                annotated_defects=array_to_string(defects),
+            )
+            dump(data, save_file, indent=3)
