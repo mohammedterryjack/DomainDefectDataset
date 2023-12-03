@@ -48,14 +48,10 @@ def generate_every_domain_signature(max_phase: int) -> list[list[str]]:
     return domain_signatures
 
 
-def random_domains(
-    n: int, width: int, depth: int, max_phase: int
-) -> list[str]:  # tuple[list[str], list[list[int]]]:
+def random_domains(n: int, max_phase: int) -> list[str]:
     domain_signatures = generate_every_domain_signature(max_phase=max_phase)
     shuffle(domain_signatures)
-    return domain_signatures[:n]  # , generate_selected_domain_patterns(
-    #    width=width, depth=depth, pattern_signatures=domain_signatures[:n]
-    # )
+    return domain_signatures[:n]
 
 
 def fill_domains(
@@ -110,6 +106,35 @@ def find_domain_boundaries_using_neighbours(segmented_image: ndarray) -> ndarray
     return contours
 
 
+def add_random_walk_defect(image: ndarray) -> None:
+    def is_within_bounds(x: int, min_x: int, max_x: int) -> bool:
+        return min_x <= x < max_x
+
+    height, width = image.shape
+    x = randint(0, width)
+    for y in range(height):
+        delta = randint(-1, 1)
+        x += delta
+        if not is_within_bounds(x=x, min_x=0, max_x=width):
+            break
+        if image[y][x] == 1:
+            break
+        image[y][x] = 1
+
+
+def add_random_walk_defects(image: ndarray, n: int) -> None:
+    for _ in range(n):
+        add_random_walk_defect(image=image)
+
+
+def label_domains_given_defects(image: ndarray) -> None:
+    _, label_ids = connectedComponents(
+        image=logical_not(image).astype("int8"),
+        connectivity=4,
+    )
+    return label_ids
+
+
 def generate_sample(
     width: int,
     depth: int,
@@ -151,38 +176,9 @@ def generate_sample(
     )
 
 
-def add_random_walk_defect(image: ndarray) -> None:
-    def is_within_bounds(x: int, min_x: int, max_x: int) -> bool:
-        return min_x <= x < max_x
-
-    height, width = image.shape
-    x = randint(0, width)
-    for y in range(height):
-        delta = randint(-1, 1)
-        x += delta
-        if not is_within_bounds(x=x, min_x=0, max_x=width):
-            break
-        if image[y][x] == 1:
-            break
-        image[y][x] = 1
-
-
-def add_random_walk_defects(image: ndarray, n: int) -> None:
-    for _ in range(n):
-        add_random_walk_defect(image=image)
-
-
-def label_domains_given_defects(image: ndarray) -> None:
-    _, label_ids = connectedComponents(
-        image=logical_not(image).astype("int8"),
-        connectivity=4,
-    )
-    return label_ids
-
-
 def generate_stochastic_sample(
-    width: int, depth: int, n_defects: int, max_phase_domain_pattern: int
-) -> tuple[ndarray, ndarray, ndarray]:
+    width: int, depth: int, n_defects: int, max_phase: int
+) -> tuple[ndarray, ndarray, ndarray, list[str]]:
     """Generate a synthetic spacetime-like pattern and annotations with stochastic defects
 
     Args:
@@ -194,6 +190,7 @@ def generate_stochastic_sample(
         ndarray: synthetic spacetime-like pattern
         ndarray: an annotation of the domains
         ndarray: an annotation of the domain defects
+        list[str]: domain pattern signatures
     """
 
     synthetic_domain_defects = zeros((depth, width))
@@ -202,9 +199,7 @@ def generate_stochastic_sample(
     n_domains = synthetic_domains.max() + 1
     domain_pattern_signatures = random_domains(
         n=n_domains,
-        width=width,
-        depth=depth,
-        max_phase=max_phase_domain_pattern,
+        max_phase=max_phase,
     )
     synthetic_spacetime = fill_domains(
         n_domains=n_domains,
@@ -217,6 +212,7 @@ def generate_stochastic_sample(
         synthetic_spacetime,
         synthetic_domains,
         synthetic_domain_defects,
+        domain_pattern_signatures,
     )
 
 
@@ -281,13 +277,11 @@ if __name__ == "__main__":
                 else:
                     max_phase_domain_pattern = randint(2, 5)
 
-            assert max_phase_domain_pattern > 1
+            assert max_phase_domain_pattern > 0
 
             if arguments.domain_pattern is None:
                 domain_pattern_signatures = random_domains(
                     n=n_domains,
-                    width=width,
-                    depth=depth,
                     max_phase=max_phase_domain_pattern,
                 )
 
@@ -302,30 +296,36 @@ if __name__ == "__main__":
                 for domain_pattern_signature in domain_pattern_signatures
             )
 
-            save_file.write(
-                f"({width}, {depth})|{','.join(map(str,domain_seed_coordinates))}|{','.join('-'.join(signature) for signature in domain_pattern_signatures)}|{n_stochastic_defects}\n"
-            )
+            if n_stochastic_defects:
+                (
+                    spacetime,
+                    domains,
+                    defects,
+                    domain_pattern_signatures,
+                ) = generate_stochastic_sample(
+                    width=width,
+                    depth=depth,
+                    n_defects=n_stochastic_defects,
+                    max_phase=max_phase_domain_pattern,
+                )
+
+            else:
+                spacetime, domains, defects = generate_sample(
+                    width=width,
+                    depth=depth,
+                    n_domains=n_domains,
+                    domain_seed_coordinates=domain_seed_coordinates,
+                    domain_pattern_signatures=domain_pattern_signatures,
+                )
 
             if arguments.display:
-                if n_stochastic_defects:
-                    spacetime, domains, defects = generate_stochastic_sample(
-                        width=width,
-                        depth=depth,
-                        n_defects=n_stochastic_defects,
-                        max_phase_domain_pattern=max_phase_domain_pattern,
-                    )
-                else:
-                    spacetime, domains, defects = generate_sample(
-                        width=width,
-                        depth=depth,
-                        n_domains=n_domains,
-                        domain_seed_coordinates=domain_seed_coordinates,
-                        domain_pattern_signatures=domain_pattern_signatures,
-                    )
-
                 fig, axs = subplots(3)
                 fig.suptitle("Synthetic Sample")
                 axs[0].imshow(spacetime, cmap="gray")
                 axs[1].imshow(domains, cmap="gray")
                 axs[2].imshow(defects, cmap="gray")
                 show()
+
+            save_file.write(
+                f"({width}, {depth})|{','.join(map(str,domain_seed_coordinates))}|{','.join('-'.join(signature) for signature in domain_pattern_signatures)}|{n_stochastic_defects}\n"
+            )
