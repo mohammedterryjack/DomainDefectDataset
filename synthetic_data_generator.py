@@ -7,7 +7,17 @@ from random import randint, shuffle
 
 from cv2 import connectedComponents
 from matplotlib.pyplot import show, subplots
-from numpy import logical_not, ndarray, ones_like, where, zeros
+from numpy import array2string, logical_not, ndarray, ones_like, where, zeros
+from numpy.random import randint
+
+
+def generate_random_signature(width: int, phase: int) -> list[str]:
+    space_pattern = randint(2, size=(phase, width))
+    signature = [
+        array2string(space_pattern[row_index], separator="").strip("[").strip("]")
+        for row_index in range(len(space_pattern))
+    ]
+    return signature
 
 
 def generate_domain_pattern_from_pattern_signature(
