@@ -14,7 +14,11 @@ from numpy.random import randint
 def generate_random_signature(width: int, phase: int) -> list[str]:
     space_pattern = randint(2, size=(phase, width))
     signature = [
-        array2string(space_pattern[row_index], separator="").strip("[").strip("]")
+        array2string(space_pattern[row_index], separator="")
+        .replace("\n", "")
+        .replace(" ", "")
+        .strip("[")
+        .strip("]")
         for row_index in range(len(space_pattern))
     ]
     return signature
@@ -47,11 +51,11 @@ def generate_selected_domain_patterns(
     return domain_patterns
 
 
-def generate_every_domain_signature(max_phase: int) -> list[list[str]]:
+def generate_every_domain_signature(min_phase: int, max_phase: int) -> list[list[str]]:
     patterns = ["0", "1", "01", "10", "010", "101", "011", "110"]
     max_n_patterns = len(patterns)
     domain_signatures = []
-    for phase in range(1, max_phase + 1):
+    for phase in range(min_phase, max_phase + 1):
         for pattern_sequence_head in combinations(range(max_n_patterns), phase):
             for pattern_sequence in permutations(pattern_sequence_head):
                 domain_signatures.append(
@@ -60,10 +64,19 @@ def generate_every_domain_signature(max_phase: int) -> list[list[str]]:
     return domain_signatures
 
 
-def random_domains(n: int, max_phase: int) -> list[str]:
-    domain_signatures = generate_every_domain_signature(max_phase=max_phase)
+def regular_domains(n: int, min_phase: int, max_phase: int) -> list[list[str]]:
+    domain_signatures = generate_every_domain_signature(
+        min_phase=min_phase, max_phase=max_phase
+    )
     shuffle(domain_signatures)
     return domain_signatures[:n]
+
+
+def irregular_domains(n: int, min_phase: int, max_phase: int) -> list[list[str]]:
+    return [
+        generate_random_signature(width=width, phase=randint(min_phase, max_phase))
+        for _ in range(n)
+    ]
 
 
 def fill_domains(
@@ -193,9 +206,9 @@ def generate_sample(
 
 
 def generate_stochastic_sample(
-    width: int, depth: int, n_defects: int, max_phase: int
+    width: int, depth: int, n_defects: int, max_phase: int, min_phase: int
 ) -> tuple[ndarray, ndarray, ndarray, list[str]]:
-    """Generate a synthetic spacetime-like pattern and annotations with stochastic defects
+    """Generate a synthetic spacetime-like pattern and annotations with stochastic defects and complex domains
 
     Args:
         width (int): the width of the synthetic spacetime-like pattern
@@ -213,8 +226,9 @@ def generate_stochastic_sample(
     add_random_walk_defects(image=synthetic_domain_defects, n=n_defects)
     synthetic_domains = label_domains_given_defects(image=synthetic_domain_defects)
     n_domains = synthetic_domains.max() + 1
-    domain_pattern_signatures = random_domains(
+    domain_pattern_signatures = irregular_domains(
         n=n_domains,
+        min_phase=min_phase,
         max_phase=max_phase,
     )
     synthetic_spacetime = fill_domains(
@@ -236,6 +250,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--space", type=int, default=200)
     parser.add_argument("--time", type=int, default=100)
+    parser.add_argument("--min_phase", type=int, default=None)
     parser.add_argument("--max_phase", type=int, default=None)
     parser.add_argument("--n_domains", type=int, default=None)
     parser.add_argument(
@@ -253,6 +268,7 @@ if __name__ == "__main__":
     n_samples = arguments.samples
     width = arguments.space
     depth = arguments.time
+    min_phase_domain_pattern = arguments.min_phase
     max_phase_domain_pattern = arguments.max_phase
     domain_seed_coordinates = arguments.domain_centre
     domain_pattern_signatures = arguments.domain_pattern
@@ -285,17 +301,27 @@ if __name__ == "__main__":
             0 <= x <= width and 0 <= y <= depth for x, y in domain_seed_coordinates
         ), f"all coordinates must be within the bounds of the image (width={width} depth={depth})"
 
+        if min_phase_domain_pattern is None:
+            if domain_pattern_signatures:
+                min_phase_domain_pattern = min(map(len, domain_pattern_signatures))
+            elif n_stochastic_defects:
+                min_phase_domain_pattern = 5
+            else:
+                min_phase_domain_pattern = 2
         if max_phase_domain_pattern is None:
             if domain_pattern_signatures:
                 max_phase_domain_pattern = max(map(len, domain_pattern_signatures))
+            elif n_stochastic_defects:
+                max_phase_domain_pattern = 10
             else:
-                max_phase_domain_pattern = randint(2, 5)
+                max_phase_domain_pattern = 5
 
         assert max_phase_domain_pattern > 0
 
         if arguments.domain_pattern is None:
-            domain_pattern_signatures = random_domains(
+            domain_pattern_signatures = regular_domains(
                 n=n_domains,
+                min_phase=min_phase_domain_pattern,
                 max_phase=max_phase_domain_pattern,
             )
 
@@ -306,7 +332,9 @@ if __name__ == "__main__":
             len(domain_pattern_signatures) == n_domains
         ), f"number of pattern signatures should match number of domains requested ({n_domains})"
         assert all(
-            1 <= len(domain_pattern_signature) <= max_phase_domain_pattern
+            min_phase_domain_pattern
+            <= len(domain_pattern_signature)
+            <= max_phase_domain_pattern
             for domain_pattern_signature in domain_pattern_signatures
         )
 
@@ -321,6 +349,7 @@ if __name__ == "__main__":
                 depth=depth,
                 n_defects=n_stochastic_defects,
                 max_phase=max_phase_domain_pattern,
+                min_phase=min_phase_domain_pattern,
             )
 
         else:

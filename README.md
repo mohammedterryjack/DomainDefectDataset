@@ -27,7 +27,7 @@ python synthetic_data_generator.py --samples 500 --no-display
 
 Stochastic Defects
 ```python
-python synthetic_data_generator.py --stochastic_defects 3
+python synthetic_data_generator.py --stochastic_defects 2
 ```
 ![](examples/example_stochastic.png)
 
@@ -39,8 +39,8 @@ python display_sample --path dataset/sample_n.json
 ## Todo:
 [X] stochastic defects
 [X] Add chaotic domains
-- Add flag to use chaotic domains
-- Add complex domains
-- Save annotations as b64 strings
+[X] Add flag to use chaotic domains
+[X] Add complex domains
+[X] Save annotations as b64 strings
 - Defects with different widths (and patterns of their own)
 - Generator can syntesise complex examples by specifying patterns with long periods and long phases
