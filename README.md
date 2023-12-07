@@ -43,4 +43,3 @@ python display_sample --path dataset/sample_n.json
 [X] Add complex domains
 [X] Save annotations as b64 strings
 - Defects with different widths (and patterns of their own)
-- Generator can syntesise complex examples by specifying patterns with long periods and long phases

@@ -388,7 +388,6 @@ if __name__ == "__main__":
                     ),
                     n_stochastic_defects=n_stochastic_defects,
                 ),
-                spacetime=array_to_string(spacetime),
                 annotated_defects=array_to_string(defects),
             )
             dump(data, save_file, indent=3)
