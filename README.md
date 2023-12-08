@@ -13,7 +13,7 @@ More control?
 ```python
 python synthetic_data_generator.py --space 100 --time 200 --max_phase 3 --n_domains 3 
 ```
-![](examples/example.png)
+![](examples/regular.png)
 
 Specify the exact patterns and locations of each domain
 ```python
@@ -27,9 +27,9 @@ python synthetic_data_generator.py --samples 500 --no-display
 
 Stochastic Defects
 ```python
-python synthetic_data_generator.py --stochastic_defects 2
+python synthetic_data_generator.py --stochastic_defects 4
 ```
-![](examples/example_stochastic.png)
+![](examples/stochastic.png)
 
 Show Saved Samples
 ```python

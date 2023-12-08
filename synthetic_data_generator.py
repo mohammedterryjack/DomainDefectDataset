@@ -365,7 +365,7 @@ if __name__ == "__main__":
             fig, axs = subplots(3)
             fig.suptitle("Synthetic Sample")
             axs[0].imshow(spacetime, cmap="gray")
-            axs[1].imshow(domains, cmap="gray")
+            axs[1].imshow(domains)
             axs[2].imshow(defects, cmap="gray")
             show()
 
@@ -378,16 +378,15 @@ if __name__ == "__main__":
                     time=depth,
                     domains=list(
                         map(
-                            lambda centre, signature: dict(
-                                centre=dict(x=centre[0], y=centre[1]),
+                            lambda signature: dict(
                                 pattern_signature="-".join(signature),
                             ),
-                            domain_seed_coordinates,
                             domain_pattern_signatures,
                         )
                     ),
                     n_stochastic_defects=n_stochastic_defects,
                 ),
                 annotated_defects=array_to_string(defects),
+                domain_regions=domains.tolist(),
             )
             dump(data, save_file, indent=3)
