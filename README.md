@@ -27,7 +27,7 @@ python synthetic_data_generator.py --samples 500 --no-display
 
 Stochastic Defects
 ```python
-python synthetic_data_generator.py --stochastic_defects 4
+python synthetic_data_generator.py --stochastic_defects 3 --max_phase 30
 ```
 ![](examples/stochastic.png)
 

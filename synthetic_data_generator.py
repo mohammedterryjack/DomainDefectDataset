@@ -138,7 +138,7 @@ def add_random_walk_defect(image: ndarray) -> None:
     height, width = image.shape
     x = randint(0, width)
     for y in range(height):
-        delta = randint(-1, 1)
+        delta = randint(-1, 2)
         x += delta
         if not is_within_bounds(x=x, min_x=0, max_x=width):
             break
