@@ -11,7 +11,7 @@ from synthetic_data_generator import fill_domains, generate_selected_domain_patt
 def string_to_array(image: str, shape: tuple[int, int]) -> ndarray:
     image_bytes = b64decode(image.encode("utf-8"))
     image_array = frombuffer(image_bytes, dtype=int)
-    return image_array.reshape(shape)
+    return image_array.reshape(shape).astype(bool).astype(int)
 
 
 if __name__ == "__main__":
